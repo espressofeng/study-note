@@ -20,7 +20,7 @@
 
 **IDEA设置全局新创建文件默认换行符**
 Settings——>Editor——>Code Style下面
-![img](../笔记图片/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAQnVn5LiA5Y-36LSo5qOA5ZGY,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center.png)
+![img](../笔记图片/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAQnVn5LiA5Y-36LSo5qOA5ZGY,size_20,color_FFFFFF,t_70,g_se,x_16.png)
 **注意：**
 
 - 改变的默认的换行符仅针对新文件有效，已存在的文件还是需要手动修改
