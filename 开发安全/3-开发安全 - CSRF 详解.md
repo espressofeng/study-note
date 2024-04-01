@@ -12,19 +12,25 @@ CSRF（Cross Site Request Forgery, 跨站域请求伪造）是一种网络的攻
 
 **先看图**：
 
-![img](../笔记图片/dev-security-csrf-1.jpg)
+<img src="../笔记图片/dev-security-csrf-1.jpg" alt="img" style="zoom:200%;" />
 
 从上图可以看出，A网站通过cookie来识别用户（C），当用户成功进行身份验证之后浏览器就会得到一个标识其身份的cookie，只要不关闭浏览器或者退出登录，以后访问A网站会一直带上这个cookie。如果这期间浏览器被人控制着向A网站发起请求去执行一些用户不想做的功能（比如添加账号），这就是会话劫持了。因为这个不是用户真正想发出的请求，这就是所谓的“请求伪造”。此外，由于请求可以从第三方网站提交，所以前缀跨站二字，即从B网站发起。
 
-**具体到银行转账为例（这是网上的一个例子，一大坨...)**：
+**具体到银行转账为例（这是网上的一个例子)**：
 
-CSRF 攻击可以在受害者毫不知情的情况下以受害者名义伪造请求发送给受攻击站点，从而在并未授权的情况下执行在权限保护之下的操作。比如说，受害者 Bob 在银行有一笔存款，通过对银行的网站发送请求 http://bank.example/withdraw?account=bob&amount=1000000&for=bob2 可以使 Bob 把 1000000 的存款转到 bob2 的账号下。通常情况下，该请求发送到网站后，服务器会先验证该请求是否来自一个合法的 session，并且该 session 的用户 Bob 已经成功登陆。黑客 Mallory 自己在该银行也有账户，他知道上文中的 URL 可以把钱进行转帐操作。Mallory 可以自己发送一个请求给银行：http://bank.example/withdraw?account=bob&amount=1000000&for=Mallory。但是这个请求来自 Mallory 而非 Bob，他不能通过安全认证，因此该请求不会起作用。这时，Mallory 想到使用 CSRF 的攻击方式，他先自己做一个网站，在网站中放入如下代码： src=”http://bank.example/withdraw?account=bob&amount=1000000&for=Mallory ”，并且通过广告等诱使 Bob 来访问他的网站。当 Bob 访问该网站时，上述 url 就会从 Bob 的浏览器发向银行，而这个请求会附带 Bob 浏览器中的 cookie 一起发向银行服务器。大多数情况下，该请求会失败，因为他要求 Bob 的认证信息。但是，如果 Bob 当时恰巧刚访问他的银行后不久，他的浏览器与银行网站之间的 session 尚未过期，浏览器的 cookie 之中含有 Bob 的认证信息。这时，悲剧发生了，这个 url 请求就会得到响应，钱将从 Bob 的账号转移到 Mallory 的账号，而 Bob 当时毫不知情。等以后 Bob 发现账户钱少了，即使他去银行查询日志，他也只能发现确实有一个来自于他本人的合法请求转移了资金，没有任何被攻击的痕迹。而 Mallory 则可以拿到钱后逍遥法外。
+CSRF 攻击可以在受害者毫不知情的情况下以受害者名义伪造请求发送给受攻击站点，从而在并未授权的情况下执行在权限保护之下的操作。
+
+比如说，受害者 Bob 在银行有一笔存款，通过对银行的网站发送请求 http://bank.example/withdraw?account=bob&amount=1000000&for=bob2 可以使 Bob 把 1000000 的存款转到 bob2 的账号下。通常情况下，该请求发送到网站后，服务器会先验证该请求是否来自一个合法的 session，并且该 session 的用户 Bob 已经成功登陆。
+
+黑客 Mallory 自己在该银行也有账户，他知道上文中的 URL 可以把钱进行转帐操作。Mallory 可以自己发送一个请求给银行：http://bank.example/withdraw?account=bob&amount=1000000&for=Mallory。但是这个请求来自 Mallory 而非 Bob，他不能通过安全认证，因此该请求不会起作用。这时，Mallory 想到使用 CSRF 的攻击方式，他先自己做一个网站，在网站中放入如下代码： src=”http://bank.example/withdraw?account=bob&amount=1000000&for=Mallory ”，并且通过广告等诱使 Bob 来访问他的网站。
+
+当 Bob 访问该网站时，上述 url 就会从 Bob 的浏览器发向银行，而这个请求会附带 Bob 浏览器中的 cookie 一起发向银行服务器。大多数情况下，该请求会失败，因为他要求 Bob 的认证信息。但是，如果 Bob 当时恰巧刚访问他的银行后不久，他的浏览器与银行网站之间的 session 尚未过期，浏览器的 cookie 之中含有 Bob 的认证信息。这时，悲剧发生了，这个 url 请求就会得到响应，钱将从 Bob 的账号转移到 Mallory 的账号，而 Bob 当时毫不知情。等以后 Bob 发现账户钱少了，即使他去银行查询日志，他也只能发现确实有一个来自于他本人的合法请求转移了资金，没有任何被攻击的痕迹。而 Mallory 则可以拿到钱后逍遥法外。
 
 ## CSRF 理解的注意点
 
-> 要理解CSRF，我认为你需要理解如下几个问题：@pdai
+> 要理解CSRF，我认为你需要理解如下几个问题：
 
-### [#](https://pdai.tech/md/develop/security/dev-security-x-csrf.html#黑客能拿到cookie吗)黑客能拿到Cookie吗?
+### 黑客能拿到Cookie吗?
 
 > CSRF 攻击是黑客借助受害者的 cookie 骗取服务器的信任，但是黑客并不能拿到 cookie，也看不到 cookie 的内容。
 
@@ -50,7 +56,7 @@ public ReponseData saveSomething(XXParam param){
 }
 ```
 
-PS：这一点是很容易被忽视的，在笔者经历过的几个项目的渗透测试中，多次出现。@pdai
+PS：这一点是很容易被忽视的，在笔者经历过的几个项目的渗透测试中，多次出现。
 
 ## CSRF 防御常规思路
 
@@ -107,7 +113,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 **Spring Security依赖包**
 
-```java
+```xml
 <dependency>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-security</artifactId>
@@ -274,7 +280,7 @@ public class CsrfSecurityRequestMatcher implements RequestMatcher {
 
 ### Spring Security - CookieCsrfTokenRepository如何工作的呢?
 
-```
+```java
 CookieCsrfTokenRepository.withHttpOnlyFalse()` 本质就是`new CookieCsrfTokenRepository()
 public static CookieCsrfTokenRepository withHttpOnlyFalse() {
     CookieCsrfTokenRepository result = new CookieCsrfTokenRepository();
